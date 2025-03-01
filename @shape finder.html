@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Shape & Clothing Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .clothing-images {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .clothing-images img {
+            width: 100px;
+            height: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Find Your Body Shape & Clothing Style</h1>
+    
+    <label for="chest">Chest Measurement (in inches):</label>
+    <input type="number" id="chest" placeholder="Enter chest measurement">
+
+    <label for="waist">Waist Measurement (in inches):</label>
+    <input type="number" id="waist" placeholder="Enter waist measurement">
+
+    <label for="hips">Hip Measurement (in inches):</label>
+    <input type="number" id="hips" placeholder="Enter hip measurement">
+
+    <button onclick="calculateBodyShape()">Calculate Body Shape</button>
+
+    <div class="result" id="result">
+        <!-- Body shape, clothing suggestions, and images will be displayed here -->
+    </div>
+</div>
+
+<script>
+    function calculateBodyShape() {
+        const chest = parseFloat(document.getElementById('chest').value);
+        const waist = parseFloat(document.getElementById('waist').value);
+        const hips = parseFloat(document.getElementById('hips').value);
+
+        if (isNaN(chest) || isNaN(waist) || isNaN(hips)) {
+            alert("Please enter valid measurements for chest, waist, and hips.");
+            return;
+        }
+
+        let bodyShape = '';
+        let suggestions = '';
+        let images = [];
+        let additionalInfo = '';
+
+        // Determine body shape based on measurements
+        if (waist < chest && waist < hips && Math.abs(chest - hips) <= 2) {
+            bodyShape = 'Hourglass';
+            suggestions = 'Opt for fitted dresses, high-waisted pants,  slim-fit shirt,slim-fit t-shirt(Round neck).';
+            images = [
+                'https://via.placeholder.com/100?text=Fitted+Dress',
+                'https://via.placeholder.com/100?text=High-Waisted+Pants',
+                'https://via.placeholder.com/100?text=Belt'
+            ];
+            additionalInfo = `
+                <strong>Inverted Triangle Body Shape:</strong>
+                <ul>
+                    <li>Shoulders and chest are much broader compared to the waist and hips.</li>
+                    <li>Dress to Accentuate: Balance the upper body with the lower body.</li>
+                    <li>Avoid: Overly tight-fitting tops.</li>
+                    <li>Recommended Styles: Straight-leg and baggy pants, leather colorful belts.</li>
+                </ul>
+            `;
+        } else if (hips > chest && hips > waist) {
+            bodyShape = 'Pear';
+            suggestions = 'plus size t-shirt,vertical stripes shirts, dark-colored bottoms,plus size jackets, and tops with embellishments to balance your proportions.';
+            images = [
+                'https://via.placeholder.com/100?text=A-Line+Skirt',
+                'https://via.placeholder.com/100?text=Dark+Bottoms',
+                'https://via.placeholder.com/100?text=Embellished+Top'
+            ];
+            additionalInfo = `
+                <strong>Pear Body Shape:</strong>
+                <ul>
+                    <li>Wider hips compared to the upper body.</li>
+                    <li>Dress to Accentuate: A-line skirts and dark-colored bottoms.</li>
+                    <li>Avoid: Tight-fitting tops.</li>
+                </ul>
+            `;
+        } else if (chest > hips && chest > waist) {
+            bodyShape = 'Inverted Triangle';
+            suggestions = 'Opt for wide-leg pants, solid oversized fit shirt, and t-shirts V-necks to balance your shoulders.';
+            images = [
+                'https://via.placeholder.com/100?text=Wide-Leg+Pants',
+                'https://via.placeholder.com/100?text=A-Line+Skirt',
+                'https://via.placeholder.com/100?text=V-Neck+Top'
+            ];
+            additionalInfo = `
+                <strong>Inverted Triangle Body Shape:</strong>
+                <ul>
+                    <li>Shoulders and chest are much broader compared to the waist and hips.</li>
+                    <li>Dress to Accentuate: Balance the upper body with the lower body.</li>
+                    <li>Avoid: Overly tight-fitting tops.</li>
+                    <li>Recommended Styles: Straight-leg and baggy pants, leather colorful belts.</li>
+                </ul>
+            `;
+        } else if (Math.abs(chest - hips) <= 2 && Math.abs(waist - chest) <= 2 && Math.abs(waist - hips) <= 2) {
+            bodyShape = 'Rectangle';
+            suggestions = 'Regular fit,slim fit shirts,layered outfits, peplum tops, and belts to create curves.';
+            images = [
+                'https://via.placeholder.com/100?text=Layered+Outfit',
+                'https://via.placeholder.com/100?text=Peplum+Top',
+                'https://via.placeholder.com/100?text=Belt'
+            ];
+            additionalInfo = `
+                <strong>Rectangle Body Shape:</strong>
+                <ul>
+                    <li>Shoulders, waist, and hips are in alignment.</li>
+                    <li>Dress to Accentuate: Fitted clothing that defines shoulders and waist.</li>
+                    <li>Avoid: Overly boxy or baggy clothing.</li>
+                </ul>
+            `;
+        } else if (waist > chest && waist > hips) {
+            bodyShape = 'Apple';
+            suggestions = 'Go for empire waist dresses, V-neck tops,Relaxed fit jeans and structured jackets to elongate your torso.';
+            images = [
+                'https://via.placeholder.com/100?text=Empire+Waist+Dress',
+                'https://via.placeholder.com/100?text=V-Neck+Top',
+                'https://via.placeholder.com/100?text=Structured+Jacket'
+            ];
+            additionalInfo = `
+                <strong>Apple Body Shape:</strong>
+                <ul>
+                    <li>Wider center with the waist being the widest part.</li>
+                    <li>Dress to Accentuate: Empire waist dresses and structured jackets.</li>
+                    <li>Avoid: Fitted clothes that cling to the waist.</li>
+                </ul>
+            `;
+        } else {
+            bodyShape = 'Unknown';
+            suggestions = 'Unable to determine body shape. Please check your measurements.';
+            images = [];
+            additionalInfo = '';
+        }
+
+        // Display the result
+        let imageHtml = images.map(img => `<img src="${img}" alt="Clothing Suggestion">`).join('');
+        document.getElementById('result').innerHTML = `
+            <strong>Your Body Shape:</strong> ${bodyShape}<br>
+            <strong>Clothing Suggestions:</strong> ${suggestions}
+            <div class="clothing-images">${imageHtml}</div>
+            ${additionalInfo}
+        `;
+    }
+</script>
+
+</body>
+</html>

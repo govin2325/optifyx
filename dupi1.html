@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion In Us - Skin Tone Matcher</title>
+    <style>
+        :root {
+            --primary-color: #8a56c9;
+            --hover-color: #6e44a3;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            background-color: #fff;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-screen, .shape-finder-screen {
+            display: none;
+        }
+
+        .logo {
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .tagline {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .start-button, #matchButton, .custom-file-upload, #nextToShapeFinder {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .start-button:hover, #matchButton:hover, .custom-file-upload:hover, #nextToShapeFinder:hover {
+            background-color: var(--hover-color);
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #matchButton {
+            display: none;
+            width: auto;
+            min-width: 200px;
+            margin: 20px auto;
+        }
+
+        #result {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .match-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen with Logo -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320">
+                    <!-- Purple heart left half -->
+                    <path d="M360 160 L437 237 L360 314 Z" fill="#8a56c9" transform="scale(0.5) translate(100, 0)"/>
+                    <!-- Light purple heart right half -->
+                    <path d="M437 160 L437 314 L360 237 Z" fill="#c9a6e8" transform="scale(0.5) translate(100, 0)"/>
+                    
+                    <!-- Text elements -->
+                    <text x="200" y="220" font-family="serif" font-style="italic" font-size="48" text-anchor="middle">fashion in us</text>
+                    <text x="200" y="250" font-family="sans-serif" font-size="12" text-anchor="middle">DOUBT LESS, DRESS BEST WITH US.</text>
+                </svg>
+            </div>
+            <button class="start-button" id="startButton">Start Skin Tone Matcher</button>
+        </div>
+
+        <!-- Main App Screen -->
+        <div class="app-screen" id="appScreen">
+            <h1>Skin Tone Color Matcher</h1>
+            
+            <div class="upload-section">
+                <div class="file-input-wrapper">
+                    <label for="imageInput" class="custom-file-upload">
+                        Choose Image
+                    </label>
+                    <input type="file" id="imageInput" accept="image/*">
+                </div>
+                <img id="imagePreview" alt="Image Preview">
+            </div>
+
+            <button id="matchButton">Match Skin Tone</button>
+
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Analyzing image...</p>
+            </div>
+
+            <div id="result"></div>
+            <button id="nextToShapeFinder">Next to Shape Finder</button>
+        </div>
+
+        <!-- Shape Finder Screen -->
+        <div class="shape-finder-screen" id="shapeFinderScreen">
+            <h1>Body Shape Finder</h1>
+            <!-- Add body shape finder implementation here -->
+        </div>
+    </div>
+
+    <script>
+        // Screens navigation
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const appScreen = document.getElementById('appScreen');
+        const shapeFinderScreen = document.getElementById('shapeFinderScreen');
+        const startButton = document.getElementById('startButton');
+        const nextToShapeFinder = document.getElementById('nextToShapeFinder');
+
+        startButton.addEventListener('click', function() {
+            welcomeScreen.style.display = 'none';
+            appScreen.style.display = 'block';
+        });
+
+        nextToShapeFinder.addEventListener('click', function() {
+            appScreen.style.display = 'none';
+            shapeFinderScreen.style.display = 'block';
+        });
+
+        // Skin tone analyzer functionality
+        const skinTones = [
+            { 
+                name: "Fair", 
+                hex: "#FBEEE3", 
+                matches: ["Soft pastels", "Cool tones", "Light neutrals", "Baby pink", "Powder blue"],
+                description: "Very light skin tone with cool undertones"
+            },
+            { 
+                name: "Porcelain", 
+                hex: "#F6E2D3", 
+                matches: ["Light and soft colors", "Cool shades", "Lavender", "Mint green", "Pearl white"],
+                description: "Light skin tone with neutral undertones"
+            },
+            { 
+                name: "Ivory", 
+                hex: "#F2D5C4", 
+                matches: ["Warm pastels", "Earthy tones", "Peach", "Coral", "Sage green"],
+                description: "Light to medium skin tone with warm undertones"
+            },
+            { 
+                name: "Sand", 
+                hex: "#E8C5B3", 
+                matches: ["Warm neutrals", "Muted colors", "Camel", "Olive", "Dusty rose"],
+                description: "Medium skin tone with neutral undertones"
+            },
+            { 
+                name: "Beige", 
+                hex: "#E4B89F", 
+                matches: ["Warm colors", "Rich jewel tones", "Terracotta", "Navy", "Burgundy"],
+                description: "Medium skin tone with warm undertones"
+            },
+            { 
+                name: "Golden", 
+                hex: "#DEBA9F", 
+                matches: ["Warm shades", "Earthy tones", "Gold", "Forest green", "Deep purple"],
+                description: "Medium to deep skin tone with warm undertones"
+            },
+            { 
+                name: "Honey", 
+                hex: "#D39B7A", 
+                matches: ["Warm, rich colors", "Warm neutrals", "Copper", "Rust", "Emerald"],
+                description: "Deep skin tone with warm undertones"
+            },
+            { 
+                name: "Bronze", 
+                hex: "#C69076", 
+                matches: ["Earthy tones", "Warm jewel tones", "Bronze", "Deep red", "Royal blue"],
+                description: "Deep skin tone with neutral undertones"
+            },
+            { 
+                name: "Almond", 
+                hex: "#B67B5E", 
+                matches: ["Warm colors", "Rich earth tones", "Cognac", "Plum", "Teal"],
+                description: "Deep skin tone with cool undertones"
+            },
+            { 
+                name: "Chestnut", 
+                hex: "#9F6548", 
+                matches: ["Deep, warm colors", "Rich neutrals", "Mahogany", "Deep orange", "Golden yellow"],
+                description: "Very deep skin tone with warm undertones"
+            },
+            { 
+                name: "Deep", 
+                hex: "#8B4E33", 
+                matches: ["Bold colors", "Warm earth tones", "Ruby", "Sapphire", "Emerald"],
+                description: "Very deep skin tone with neutral undertones"
+            },
+            { 
+                name: "Espresso", 
+                hex: "#613025", 
+                matches: ["Rich, dark colors", "Warm metallics", "Deep purple", "Rich gold", "Bright white"],
+                description: "Very deep skin tone with cool undertones"
+            }
+        ];
+
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const matchButton = document.getElementById('matchButton');
+        const resultDiv = document.getElementById('result');
+        const loadingDiv = document.querySelector('.loading');
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function colorDistance(color1, color2) {
+            const rmean = (color1.r + color2.r) / 2;
+            const r = color1.r - color2.r;
+            const g = color1.g - color2.g;
+            const b = color1.b - color2.b;
+            return Math.sqrt((2 + rmean/256) * r*r + 4 * g*g + (2 + (255-rmean)/256) * b*b);
+        }
+
+        function findNearestSkinTone(targetColor) {
+            let nearestDistance = Infinity;
+            let nearestTone = null;
+
+            skinTones.forEach(tone => {
+                const toneRgb = hexToRgb(tone.hex);
+                const distance = colorDistance(targetColor, toneRgb);
+                
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestTone = tone;
+                }
+            });
+
+            return nearestTone;
+        }
+
+        function displayResults(skinTone) {
+            resultDiv.innerHTML = `
+                <div class="result-header">
+                    <div class="color-swatch" style="background-color: ${skinTone.hex};"></div>
+                    <div>
+                        <h2>${skinTone.name}</h2>
+                        <p>${skinTone.description}</p>
+                    </div>
+                </div>
+                <h3>Color Matches:</h3>
+                <div class="matches-grid">
+                    ${skinTone.matches.map(match => `
+                        <div class="match-item">
+                            <p>${match}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    matchButton.style.display = 'block';
+                    resultDiv.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        matchButton.addEventListener('click', function() {
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            // Simulate image analysis delay
+            setTimeout(() => {
+                // For demonstration, we'll use a fixed color
+                // In a real application, you would analyze the uploaded image
+                const detectedColor = { r: 242, g: 213, b: 196 }; // Example detected color
+                const matchedTone = findNearestSkinTone(detectedColor);
+                
+                loadingDiv.style.display = 'none';
+                displayResults(matchedTone);
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
