@@ -1,0 +1,587 @@
+
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion In Us - Skin Tone Matcher</title>
+    <style>
+        :root {
+            --primary-color: #8a56c9;
+            --hover-color: #6e44a3;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            background-color: #fff;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-screen {
+            display: none;
+        }
+
+        .logo {
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .tagline {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .start-button, #matchButton, .custom-file-upload {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .start-button:hover, #matchButton:hover, .custom-file-upload:hover {
+            background-color: var(--hover-color);
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #matchButton {
+            display: none;
+            width: auto;
+            min-width: 200px;
+            margin: 20px auto;
+        }
+
+        #result {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .match-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen with Logo -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320">
+                    <!-- Purple heart left half -->
+                    <path d="M360 160 L437 237 L360 314 Z" fill="#8a56c9" transform="scale(0.5) translate(100, 0)"/>
+                    <!-- Light purple heart right half -->
+                    <path d="M437 160 L437 314 L360 237 Z" fill="#c9a6e8" transform="scale(0.5) translate(100, 0)"/>
+                    
+                    <!-- Text elements -->
+                    <text x="200" y="220" font-family="serif" font-style="italic" font-size="48" text-anchor="middle">fashion in us</text>
+                    <text x="200" y="250" font-family="sans-serif" font-size="12" text-anchor="middle">DOUBT LESS, DRESS BEST WITH US.</text>
+                </svg>
+            </div>
+            <button class="start-button" id="startButton">Start Skin Tone Matcher</button>
+        </div>
+
+        <!-- Main App Screen -->
+        <div class="app-screen" id="appScreen">
+            <h1>Skin Tone Color Matcher</h1>
+            
+            <div class="upload-section">
+                <div class="file-input-wrapper">
+                    <label for="imageInput" class="custom-file-upload">
+                        Choose Image
+                    </label>
+                    <input type="file" id="imageInput" accept="image/*">
+                </div>
+                <img id="imagePreview" alt="Image Preview">
+            </div>
+
+            <button id="matchButton">Match Skin Tone</button>
+
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Analyzing image...</p>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Screens navigation
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const appScreen = document.getElementById('appScreen');
+        const startButton = document.getElementById('startButton');
+
+        startButton.addEventListener('click', function() {
+            welcomeScreen.style.display = 'none';
+            appScreen.style.display = 'block';
+        });
+
+        // Skin tone analyzer functionality
+        const skinTones = [
+            { 
+                name: "Fair", 
+                hex: "#FBEEE3", 
+                matches: ["Soft pastels", "Cool tones", "Light neutrals", "Baby pink", "Powder blue"],
+                description: "Very light skin tone with cool undertones"
+            },
+            { 
+                name: "Porcelain", 
+                hex: "#F6E2D3", 
+                matches: ["Light and soft colors", "Cool shades", "Lavender", "Mint green", "Pearl white"],
+                description: "Light skin tone with neutral undertones"
+            },
+            { 
+                name: "Ivory", 
+                hex: "#F2D5C4", 
+                matches: ["Warm pastels", "Earthy tones", "Peach", "Coral", "Sage green"],
+                description: "Light to medium skin tone with warm undertones"
+            },
+            { 
+                name: "Sand", 
+                hex: "#E8C5B3", 
+                matches: ["Warm neutrals", "Muted colors", "Camel", "Olive", "Dusty rose"],
+                description: "Medium skin tone with neutral undertones"
+            },
+            { 
+                name: "Beige", 
+                hex: "#E4B89F", 
+                matches: ["Warm colors", "Rich jewel tones", "Terracotta", "Navy", "Burgundy"],
+                description: "Medium skin tone with warm undertones"
+            },
+            { 
+                name: "Golden", 
+                hex: "#DEBA9F", 
+                matches: ["Warm shades", "Earthy tones", "Gold", "Forest green", "Deep purple"],
+                description: "Medium to deep skin tone with warm undertones"
+            },
+            { 
+                name: "Honey", 
+                hex: "#D39B7A", 
+                matches: ["Warm, rich colors", "Warm neutrals", "Copper", "Rust", "Emerald"],
+                description: "Deep skin tone with warm undertones"
+            },
+            { 
+                name: "Bronze", 
+                hex: "#C69076", 
+                matches: ["Earthy tones", "Warm jewel tones", "Bronze", "Deep red", "Royal blue"],
+                description: "Deep skin tone with neutral undertones"
+            },
+            { 
+                name: "Almond", 
+                hex: "#B67B5E", 
+                matches: ["Warm colors", "Rich earth tones", "Cognac", "Plum", "Teal"],
+                description: "Deep skin tone with cool undertones"
+            },
+            { 
+                name: "Chestnut", 
+                hex: "#9F6548", 
+                matches: ["Deep, warm colors", "Rich neutrals", "Mahogany", "Deep orange", "Golden yellow"],
+                description: "Very deep skin tone with warm undertones"
+            },
+            { 
+                name: "Deep", 
+                hex: "#8B4E33", 
+                matches: ["Bold colors", "Warm earth tones", "Ruby", "Sapphire", "Emerald"],
+                description: "Very deep skin tone with neutral undertones"
+            },
+            { 
+                name: "Espresso", 
+                hex: "#613025", 
+                matches: ["Rich, dark colors", "Warm metallics", "Deep purple", "Rich gold", "Bright white"],
+                description: "Very deep skin tone with cool undertones"
+            }
+        ];
+
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const matchButton = document.getElementById('matchButton');
+        const resultDiv = document.getElementById('result');
+        const loadingDiv = document.querySelector('.loading');
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function colorDistance(color1, color2) {
+            const rmean = (color1.r + color2.r) / 2;
+            const r = color1.r - color2.r;
+            const g = color1.g - color2.g;
+            const b = color1.b - color2.b;
+            return Math.sqrt((2 + rmean/256) * r*r + 4 * g*g + (2 + (255-rmean)/256) * b*b);
+        }
+
+        function findNearestSkinTone(targetColor) {
+            let nearestDistance = Infinity;
+            let nearestTone = null;
+
+            skinTones.forEach(tone => {
+                const toneRgb = hexToRgb(tone.hex);
+                const distance = colorDistance(targetColor, toneRgb);
+                
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestTone = tone;
+                }
+            });
+
+            return nearestTone;
+        }
+
+        function displayResults(skinTone) {
+            resultDiv.innerHTML = `
+                <div class="result-header">
+                    <div class="color-swatch" style="background-color: ${skinTone.hex};"></div>
+                    <div>
+                        <h2>${skinTone.name}</h2>
+                        <p>${skinTone.description}</p>
+                    </div>
+                </div>
+                <h3>Color Matches:</h3>
+                <div class="matches-grid">
+                    ${skinTone.matches.map(match => `
+                        <div class="match-item">
+                            <p>${match}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    matchButton.style.display = 'block';
+                    resultDiv.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        matchButton.addEventListener('click', function() {
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            // Simulate image analysis delay
+            setTimeout(() => {
+                // For demonstration, we'll use a fixed color
+                // In a real application, you would analyze the uploaded image
+                const detectedColor = { r: 242, g: 213, b: 196 }; // Example detected color
+                const matchedTone = findNearestSkinTone(detectedColor);
+                
+                loadingDiv.style.display = 'none';
+                displayResults(matchedTone);
+            }, 1500);
+        });
+
+<!-- Shape Finder Interface -->
+<div id="shapeFinder" class="container">
+    <h1>Find Your Body Shape</h1>
+    <label for="chest">Chest Measurement (in inches):</label>
+    <input type="number" id="chest" placeholder="Enter chest measurement">
+    <label for="waist">Waist Measurement (in inches):</label>
+    <input type="number" id="waist" placeholder="Enter waist measurement">
+    <label for="hips">Hip Measurement (in inches):</label>
+    <input type="number" id="hips" placeholder="Enter hip measurement">
+    <button id="calculateShapeButton">Calculate Body Shape</button>
+    <div id="shapeResult"></div>
+    <button id="finalResultButton" style="display: none;">Final Result</button>
+</div>
+
+<script>
+    // Show the logo interface initially
+    document.getElementById('logoInterface').style.display = 'flex';
+
+    // Start button functionality
+    document.getElementById('startButton').addEventListener('click', function() {
+        document.getElementById('logoInterface').style.display = 'none';
+        document.getElementById('colorFinder').style.display = 'block';
+    });
+
+    // Color Finder functionality
+    const skinTones = [
+        { name: "Fair", hex: "#FBEEE3", matches: ["Soft pastels", "Cool tones", "Light neutrals"] },
+        { name: "Porcelain", hex: "#F6E2D3", matches: ["Light and soft colors", "Cool shades"] },
+        { name: "Ivory", hex: "#F2D5C4", matches: ["Warm pastels", "Earthy tones"] },
+        { name: "Sand", hex: "#E8C5B3", matches: ["Warm neutrals", "Muted colors"] },
+        { name: "Beige", hex: "#E4B89F", matches: ["Warm colors", "Rich jewel tones"] },
+        { name: "Golden", hex: "#DEBA9F", matches: ["Warm shades", "Earthy tones"] },
+        { name: "Honey", hex: "#D39B7A", matches: ["Warm, rich colors", "Warm neutrals"] },
+        { name: "Bronze", hex: "#C69076", matches: ["Earthy tones", "Warm jewel tones"] },
+        { name: "Almond", hex: "#B67B5E", matches: ["Warm colors", "Rich earth tones"] },
+        { name: "Chestnut", hex: "#9F6548", matches: ["Deep, warm colors", "Rich neutrals"] },
+        { name: "Deep", hex: "#8B4E33", matches: ["Bold colors", "Warm earth tones"] },
+        { name: "Espresso", hex: "#613025", matches: ["Rich, dark colors", "Warm metallics"] }
+    ];
+
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const matchButton = document.getElementById('matchButton');
+    const resultDiv = document.getElementById('result');
+    const loadingDiv = document.querySelector('.loading');
+    const nextToShapeFinder = document.getElementById('nextToShapeFinder');
+
+    imageInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                matchButton.style.display = 'block';
+                resultDiv.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    matchButton.addEventListener('click', function() {
+        loadingDiv.style.display = 'block';
+        resultDiv.style.display = 'none';
+
+        // Simulate image analysis delay
+        setTimeout(() => {
+            const detectedColor = { r: 242, g: 213, b: 196 }; // Example detected color
+            const matchedTone = findNearestSkinTone(detectedColor);
+            loadingDiv.style.display = 'none';
+            displayResults(matchedTone);
+            nextToShapeFinder.style.display = 'block'; // Show next button
+        }, 1500);
+    });
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    function colorDistance(color1, color2) {
+        const rmean = (color1.r + color2.r) / 2;
+        const r = color1.r - color2.r;
+        const g = color1.g - color2.g;
+        const b = color1.b - color2.b;
+        return Math.sqrt((2 + rmean/256) * r*r + 4 * g*g + (2 + (255-rmean)/256) * b*b);
+    }
+
+    function findNearestSkinTone(targetColor) {
+        let nearestDistance = Infinity;
+        let nearestTone = null;
+
+        skinTones.forEach(tone => {
+            const toneRgb = hexToRgb(tone.hex);
+            const distance = colorDistance(targetColor, toneRgb);
+            
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestTone = tone;
+            }
+        });
+
+        return nearestTone;
+    }
+
+    function displayResults(skinTone) {
+        resultDiv.innerHTML = `
+            <div style="background-color: ${skinTone.hex}; padding: 10px; border-radius: 8px;">
+                <h2>${skinTone.name}</h2>
+                <h3>Color Matches:</h3>
+                <ul>
+                    ${skinTone.matches.map(match => `<li>${match}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+        resultDiv.style.display = 'block';
+    }
+
+    nextToShapeFinder.addEventListener('click', function() {
+        document.getElementById('colorFinder').style.display = 'none';
+        document.getElementById('shapeFinder').style.display = 'block';
+    });
+
+    // Shape Finder functionality
+    const calculateShapeButton = document.getElementById('calculateShapeButton');
+    const shapeResult = document.getElementById('shapeResult');
+    const finalResultButton = document.getElementById('finalResultButton');
+
+    calculateShapeButton.addEventListener('click', function() {
+        const chest = parseFloat(document.getElementById('chest').value);
+        const waist = parseFloat(document.getElementById('waist').value);
+        const hips = parseFloat(document.getElementById('hips').value);
+
+        if (isNaN(chest) || isNaN(waist) || isNaN(hips)) {
+            alert("Please enter valid measurements for chest, waist, and hips.");
+            return;
+        }
+
+        let bodyShape = '';
+        let suggestions = [];
+
+        // Determine body shape based on measurements
+        if (waist < chest && waist < hips && Math.abs(chest - hips) <= 2) {
+            bodyShape = 'Hourglass';
+            suggestions = ['Fitted dresses', 'High-waisted pants'];
+        } else if (hips > chest && hips > waist) {
+            bodyShape = 'Pear';
+            suggestions = ['A-line skirts', 'Dark-colored bottoms'];
+        } else if (chest > hips && chest > waist) {
+            bodyShape = 'Inverted Triangle';
+            suggestions = ['Wide-leg pants', 'A-line skirts'];
+        } else if (Math.abs(chest - hips) <= 2 && Math.abs(waist - chest) <= 2 && Math.abs(waist - hips) <= 2) {
+            bodyShape = 'Rectangle';
+            suggestions = ['Layered outfits', 'Peplum tops'];
+        } else if (waist > chest && waist > hips) {
+            bodyShape = 'Apple';
+            suggestions = ['Empire waist dresses', 'V-neck tops'];
+        } else {
+            bodyShape = 'Unknown';
+            suggestions = ['Unable to determine body shape. Please check your measurements.'];
+        }
+
+        shapeResult.innerHTML = `
+            <strong>Your Body Shape:</strong> ${bodyShape}<br>
+            <strong>Clothing Suggestions:</strong> ${suggestions.join(', ')}
+        `;
+        shapeResult.style.display = 'block';
+        finalResultButton.style.display = 'block'; // Show final result button
+    });
+
+    finalResultButton.addEventListener('click', function() {
+        const colorMatches = resultDiv.querySelector('ul').children;
+        const clothingSuggestions = shapeResult.innerText.split(': ')[1].split(', ');
+
+        // Combine color and clothing suggestions
+        const combinedResults = [];
+        for (let i = 0; i < Math.min(colorMatches.length, clothingSuggestions.length); i++) {
+            combinedResults.push(`${colorMatches[i].innerText} + ${clothingSuggestions[i]}`);
+        }
+
+        // Randomly select one of the combined results
+        const randomResult = combinedResults[Math.floor(Math.random() * combinedResults.length)];
+        const searchQuery = randomResult;
+        const url = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+        window.open(url, '_blank');
+    });
+</script>
+
+</body>
+</html>
