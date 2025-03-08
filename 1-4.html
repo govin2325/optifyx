@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Skin Tone Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            max-height: 300px;
+        }
+        .color-sample {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #000;
+            margin: 10px auto;
+            display: block;
+        }
+        #faceCanvas {
+            display: none;
+        }
+        #imagePreview {
+            position: relative;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        .face-box {
+            position: absolute;
+            border: 2px solid #00ff00;
+            cursor: pointer;
+        }
+        .loading {
+            display: none;
+            margin: 20px auto;
+        }
+        .color-matches {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .color-match {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+        }
+        .palette-container {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        .palette {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 140px;
+        }
+        .palette-colors {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 140px;
+        }
+        .palette-color {
+            width: 30px;
+            height: 30px;
+            margin: 2px;
+        }
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Advanced Skin Tone Analyzer</h1>
+    <p>Upload a clear photo of your face for accurate skin tone analysis</p>
+    
+    <input type="file" id="imageUpload" accept="image/*">
+    <button id="analyzeBtn" onclick="analyzeImage()">Analyze Skin Tone</button>
+    <div id="error"></div>
+    
+    <div class="loading" id="loading">
+        <p>Analyzing image...</p>
+    </div>
+    
+    <div id="imagePreview"></div>
+    <canvas id="faceCanvas"></canvas>
+    
+    <div id="result"></div>
+    
+    <div class="palette-container" id="colorPalettes"></div>
+</div>
+
+<script>
+    // Define skin tones with hex values and matching colors
+    const skinTones = [
+        { name: "Fair", value: "#FBEEE3", minRGB: [240, 220, 210], maxRGB: [255, 240, 230], matches: ["#E8C5C6", "#C5E8E5", "#F2D5DF", "#D5F2D8", "#E5C5E8"] },
+        { name: "Porcelain", value: "#F6E2D3", minRGB: [230, 210, 200], maxRGB: [246, 230, 220], matches: ["#D3E2F6", "#F6D3E2", "#E2F6D3", "#D3F6E2", "#E2D3F6"] },
+        { name: "Ivory", value: "#F2D5C4", minRGB: [220, 200, 180], maxRGB: [242, 220, 200], matches: ["#C4D5F2", "#F2C4D5", "#D5F2C4", "#C4F2D5", "#D5C4F2"] },
+        { name: "Sand", value: "#E8C5B3", minRGB: [210, 180, 160], maxRGB: [232, 200, 180], matches: ["#B3C5E8", "#E8B3C5", "#C5E8B3", "#B3E8C5", "#C5B3E8"] },
+        { name: "Beige", value: "#E4B89F", minRGB: [200, 170, 150], maxRGB: [228, 190, 170], matches: ["#9FB8E4", "#E49FB8", "#B8E49F", "#9FE4B8", "#B89FE4"] },
+        { name: "Golden", value: "#DEBA9F", minRGB: [190, 160, 140], maxRGB: [222, 186, 160], matches: ["#9FBADE", "#DE9FBA", "#BADE9F", "#9FDEBA", "#BA9FDE"] },
+        { name: "Honey", value: "#D39B7A", minRGB: [180, 140, 110], maxRGB: [211, 170, 140], matches: ["#7A9BD3", "#D37A9B", "#9BD37A", "#7AD39B", "#9B7AD3"] },
+        { name: "Bronze", value: "#C69076", minRGB: [170, 130, 100], maxRGB: [198, 160, 130], matches: ["#7690C6", "#C67690", "#90C676", "#76C690", "#9076C6"] },
+        { name: "Almond", value: "#B67B5E", minRGB: [160, 110, 80], maxRGB: [182, 140, 110], matches: ["#5E7BB6", "#B65E7B", "#7BB65E", "#5EB67B", "#7B5EB6"] },
+        { name: "Chestnut", value: "#9F6548", minRGB: [140, 90, 60], maxRGB: [159, 120, 90], matches: ["#48659F", "#9F4865", "#659F48", "#489F65", "#65489F"] },
+        { name: "Deep", value: "#8B4E33", minRGB: [120, 70, 40], maxRGB: [139, 100, 70], matches: ["#334E8B", "#8B334E", "#4E8B33", "#338B4E", "#4E338B"] },
+        { name: "Espresso", value: "#613025", minRGB: [80, 40, 30], maxRGB: [97, 70, 50], matches: ["#253061", "#612530", "#306125", "#256130", "#302561"] }
+    ];
+
+    // Fashion palette suggestions
+    const palettes = [
+        { name: "Casual", colors: ["#2D4A5F", "#E9B48C", "#A0522D", "#F5F5DC", "#8B4513"] },
+        { name: "Formal", colors: ["#000000", "#FFFFFF", "#696969", "#A9A9A9", "#D3D3D3"] },
+        { name: "Summer", colors: ["#87CEEB", "#FFFFFF", "#F08080", "#98FB98", "#FFD700"] },
+        { name: "Winter", colors: ["#483D8B", "#2F4F4F", "#800000", "#F0F8FF", "#2E8B57"] }
+    ];
+
+    // Initialize face detection
+    document.addEventListener('DOMContentLoaded', function() {
+        // We'll add face detection function later
+    });
+
+    async function analyzeImage() {
+        const fileInput = document.getElementById('imageUpload');
+        const resultDiv = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+        const loadingDiv = document.getElementById('loading');
+        const imagePreviewDiv = document.getElementById('imagePreview');
+        const canvas = document.getElementById('faceCanvas');
+        const colorPalettesDiv = document.getElementById('colorPalettes');
+        
+        // Clear previous results
+        resultDiv.innerHTML = '';
+        errorDiv.innerHTML = '';
+        imagePreviewDiv.innerHTML = '';
+        colorPalettesDiv.innerHTML = '';
+
+        if (fileInput.files.length === 0) {
+            errorDiv.innerHTML = "Please upload an image.";
+            return;
+        }
+
+        const file = fileInput.files[0];
+        
+        // Check file size
+        if (file.size > 10 * 1024 * 1024) { // 10MB
+            errorDiv.innerHTML = "File size too large. Please upload an image smaller than 10MB.";
+            return;
+        }
+
+        loadingDiv.style.display = 'block';
+
+        try {
+            // Load the image
+            const imgUrl = URL.createObjectURL(file);
+            const img = new Image();
+            img.src = imgUrl;
+            
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            // Display the image
+            imagePreviewDiv.innerHTML = `<img src="${imgUrl}" id="uploadedImage">`;
+            
+            // Setup canvas for analysis
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+            
+            // Get image data for analysis
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // Extract skin pixels
+            const skinPixels = extractSkinPixels(data, canvas.width, canvas.height);
+            
+            if (skinPixels.length === 0) {
+                errorDiv.innerHTML = "Could not detect skin in the image. Please try a clearer photo.";
+                loadingDiv.style.display = 'none';
+                return;
+            }
+            
+            // Calculate average skin color
+            const avgColor = calculateAverageColor(skinPixels);
+            const hexColor = rgbToHex(avgColor[0], avgColor[1], avgColor[2]);
+            
+            // Find closest skin tone
+            const closestTone = findClosestTone(avgColor);
+            
+            // Show results
+            resultDiv.innerHTML = `
+                <h2>Estimated Skin Tone: ${closestTone.name}</h2>
+                <div class="color-sample" style="background-color: ${closestTone.value};"></div>
+                <p>Your detected skin color: <span style="font-weight: bold; color: ${hexColor}">${hexColor}</span></p>
+                <h3>Complementary Colors</h3>
+                <div class="color-matches">
+                    ${closestTone.matches.map(color => 
+                        `<div class="color-match" style="background-color: ${color};" title="${color}"></div>`
+                    ).join('')}
+                </div>
+            `;
+            
+            // Display fashion palettes
+            colorPalettesDiv.innerHTML = `<h3>Recommended Color Palettes</h3>`;
+            
+            palettes.forEach(palette => {
+                const paletteDiv = document.createElement('div');
+                paletteDiv.className = 'palette';
+                
+                const paletteTitle = document.createElement('h4');
+                paletteTitle.textContent = palette.name;
+                
+                const paletteColors = document.createElement('div');
+                paletteColors.className = 'palette-colors';
+                
+                palette.colors.forEach(color => {
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'palette-color';
+                    colorDiv.style.backgroundColor = color;
+                    colorDiv.title = color;
+                    paletteColors.appendChild(colorDiv);
+                });
+                
+                paletteDiv.appendChild(paletteTitle);
+                paletteDiv.appendChild(paletteColors);
+                colorPalettesDiv.appendChild(paletteDiv);
+            });
+            
+        } catch (error) {
+            errorDiv.innerHTML = "Error analyzing image: " + error.message;
+            console.error(error);
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    }
+
+    function extractSkinPixels(imageData, width, height) {
+        const skinPixels = [];
+        
+        for (let i = 0; i < imageData.length; i += 4) {
+            const r = imageData[i];
+            const g = imageData[i + 1];
+            const b = imageData[i + 2];
+            
+            // Skip transparent pixels
+            if (imageData[i + 3] < 128) continue;
+            
+            // Simple skin detection using RGB values
+            // This is a basic approach - real systems use more sophisticated methods
+            if (isSkinPixel(r, g, b)) {
+                skinPixels.push([r, g, b]);
+            }
+        }
+        
+        return skinPixels;
+    }
+    
+    function isSkinPixel(r, g, b) {
+        // Basic skin detection rules
+        const sum = r + g + b;
+        const rg = r - g;
+        
+        // Basic rule: R > G > B for most skin tones
+        // Additional checks to filter out very saturated colors and very dark/light colors
+        return r > 60 && // Not too dark
+               r < 250 && // Not too light
+               g > 40 && 
+               b > 20 && 
+               r > g && 
+               g > b && // R > G > B pattern
+               rg > 15 && // Red-Green difference
+               sum > 100 && // Not too dark overall
+               sum < 700 && // Not too light overall
+               Math.abs(r - g) < 80; // R and G shouldn't be too far apart
+    }
+    
+    function calculateAverageColor(pixels) {
+        if (pixels.length === 0) return [0, 0, 0];
+        
+        let r = 0, g = 0, b = 0;
+        
+        for (const pixel of pixels) {
+            r += pixel[0];
+            g += pixel[1];
+            b += pixel[2];
+        }
+        
+        r = Math.round(r / pixels.length);
+        g = Math.round(g / pixels.length);
+        b = Math.round(b / pixels.length);
+        
+        return [r, g, b];
+    }
+    
+    function rgbToHex(r, g, b) {
+        return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+    }
+    
+    function findClosestTone(rgbColor) {
+        let closestTone = skinTones[0];
+        let minDistance = Infinity;
+        
+        for (const tone of skinTones) {
+            // Calculate color distance using weighted RGB
+            // Using a weighted formula that puts more emphasis on red channel
+            // since it's more important for skin tones
+            const midRGB = [
+                (tone.minRGB[0] + tone.maxRGB[0]) / 2,
+                (tone.minRGB[1] + tone.maxRGB[1]) / 2,
+                (tone.minRGB[2] + tone.maxRGB[2]) / 2
+            ];
+            
+            const distance = Math.sqrt(
+                3 * (rgbColor[0] - midRGB[0]) ** 2 + 
+                2 * (rgbColor[1] - midRGB[1]) ** 2 + 
+                1 * (rgbColor[2] - midRGB[2]) ** 2
+            );
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestTone = tone;
+            }
+        }
+        
+        return closestTone;
+    }
+</script>
+</body>
+</html>
